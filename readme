@@ -1,0 +1,7 @@
+Run Docker command for run project 
+
+-- docker-compose up -d 
+
+for run with build 
+
+--- docker-compose up --build

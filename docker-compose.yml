@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    
+  user-service:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - kafka
+      - mongodb
+    ports:
+      - "3001:3001"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/userDB
+      KAFKA_BROKERS: kafka:9092
+
+  profile-service:
+    build:
+      context: ./profile_management
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - kafka
+      - mongodb
+    ports:
+      - "3002:3002"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/profileDB
+      KAFKA_BROKERS: PLAINTEXT://kafka:9092
+
+  video-service:
+    build:
+      context: ./video
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - kafka
+      - mongodb
+    ports:
+      - "3003:3003"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/videoDB
+      KAFKA_BROKERS: PLAINTEXT://kafka:9092
+
+  mongodb:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

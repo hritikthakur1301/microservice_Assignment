@@ -1,0 +1,4 @@
+FROM wurstmeister/kafka:latest
+EXPOSE 9092
+
+CMD ["start-kafka.sh"]
